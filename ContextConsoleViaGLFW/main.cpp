@@ -1,3 +1,5 @@
+#define GLEW_STATIC
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <thread>
 
@@ -16,6 +18,14 @@ int main()
 	//GLFWwindow* fullScreen = glfwCreateWindow(800, 600, "OpenGL", glfwGetPrimaryMonitor(), nullptr); // Fullscreen
 
 	glfwMakeContextCurrent(window);
+
+	glewExperimental = GL_TRUE;
+	glewInit();
+
+	GLuint vertexBuffer;
+	glGenBuffers(1, &vertexBuffer);
+
+	printf("%u\n", vertexBuffer);
 
 	while (!glfwWindowShouldClose(window))
 	{
