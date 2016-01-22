@@ -1,7 +1,35 @@
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <SOIL.h>
 #include <thread>
+
+// code to be compiled in video card to be the shader
+const char *vertexSource =
+    "#version 150 core\n     \
+        in vec2 position;   \
+        in vec3 color;      \
+        in vec2 texcoord;   \
+                            \
+        out vec3 Color;     \
+        out vec2 Texcoord;  \
+        void main() {       \
+            Color = color;  \
+            Texcoord = texcoord;    \
+            gl_Position = vec4(position, 0.0, 1.0); \
+        }";
+const char *fragmentSource =
+    "#version 150 core\n     \
+        in vec3 Color;      \
+        in vec2 Texcoord;   \
+                            \
+        out vec4 outColor;  \
+                            \
+        uniform sampler2D tex;  \
+                            \
+        void main() {       \
+            outColor = texture(tex, Texcoord) * vec4(Color, 1.0);   \
+        }";
 
 // Checking if a shader compiled successfully
 void checkStatus(GLuint &shader) {
@@ -38,10 +66,18 @@ int main() {
 
     // open gl code
     float vertices[] = {
-        -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, // Top-left
-        0.5f,  0.5f, 0.0f, 1.0f, 0.0f, // Top-right
-        0.5f, -0.5f, 0.0f, 0.0f, 1.0f, // Bottom-right
-        -0.5f, -0.5f, 1.0f, 1.0f, 1.0f  // Bottom-left
+        //  Position      Color             Texcoords
+        -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // Top-left
+        0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // Top-right
+        0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // Bottom-right
+        -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f  // Bottom-left
+    };
+
+    float color[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+
+    float pixels[] = {
+        0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,   0.0f, 0.0f, 0.0f
     };
 
     GLuint elements[] = {
@@ -69,27 +105,6 @@ int main() {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                  sizeof(elements), elements, GL_STATIC_DRAW);
 
-    // code to be compiled in video card to be the shader
-    const char *vertexSource =
-        "#version 150\n     \
-        in vec2 position;   \
-        in vec3 color;      \
-                            \
-        out vec3 Color;     \
-        void main() {       \
-            Color = color;  \
-            gl_Position = vec4(position, 0.0, 1.0); \
-        }";
-    const char *fragmentSource =
-        "#version 150\n     \
-        in vec3 Color;      \
-                            \
-        out vec4 outColor;  \
-                            \
-        void main() {       \
-            outColor = vec4(Color, 1.0);    \
-        }";
-
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexSource, NULL);
     glCompileShader(vertexShader);
@@ -97,15 +112,13 @@ int main() {
     checkStatus(vertexShader);
 
     // Retrieving the compile log
-    // char buffer[512];
-    // glGetShaderInfoLog(vertexShader, 512, NULL, buffer);
-
     GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
     glCompileShader(fragmentShader);
 
     checkStatus(fragmentShader);
 
+    // Link the vertex and fragment shader into a shader program
     GLuint shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
@@ -115,15 +128,21 @@ int main() {
     glLinkProgram(shaderProgram);
     glUseProgram(shaderProgram);
 
+    // Specify the layout of the vertex data
     GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
-    glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE,
-                          5 * sizeof(float), 0);
     glEnableVertexAttribArray(posAttrib);
+    glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE,
+                          7 * sizeof(float), 0);
 
     GLint colAttrib = glGetAttribLocation(shaderProgram, "color");
     glEnableVertexAttribArray(colAttrib);
     glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE,
-                          5 * sizeof(float), (void*)(2 * sizeof(float)));
+                          7 * sizeof(float), (void*)(2 * sizeof(float)));
+
+    GLint texAttrib = glGetAttribLocation(shaderProgram, "texcoord");
+    glEnableVertexAttribArray(texAttrib);
+    glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE,
+                          7 * sizeof(float), (void*)(5 * sizeof(float)));
 
     // use uniform to change the arrtibute of the triganle
     // GLint uniColor = glGetUniformLocation(shaderProgram, "triangleColor");
@@ -131,6 +150,28 @@ int main() {
 
     // let the color change with time
     // auto t_start = std::chrono::high_resolution_clock::now();
+
+    // draw texture
+    GLuint tex;
+    glGenTextures(1, &tex);
+
+    glBindTexture(GL_TEXTURE_2D, tex);
+    int width, height;
+    unsigned char* image =
+        SOIL_load_image("sample.png", &width, &height, 0, SOIL_LOAD_RGB);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
+                 GL_UNSIGNED_BYTE, image);
+    SOIL_free_image_data(image);
+
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color);
+
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 2, 2, 0, GL_RGB, GL_FLOAT, pixels);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     // main loop
     while (!glfwWindowShouldClose(window)) {
@@ -149,6 +190,18 @@ int main() {
     }
 
     // end
+    //SOIL_free_image_data(image);
+    glDeleteTextures(1, &tex);
+
+    glDeleteProgram(shaderProgram);
+    glDeleteShader(fragmentShader);
+    glDeleteShader(vertexShader);
+
+    glDeleteBuffers(1, &ebo);
+    glDeleteBuffers(1, &vbo);
+
+    glDeleteVertexArrays(1, &vao);
+
     glfwTerminate();
     return 0;
 }
