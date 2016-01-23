@@ -18,6 +18,7 @@ const char *vertexSource =
             Texcoord = texcoord;    \
             gl_Position = vec4(position, 0.0, 1.0); \
         }";
+
 const char *fragmentSource =
     "#version 150 core\n     \
         in vec3 Color;      \
@@ -50,43 +51,19 @@ int main() {
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
     GLFWwindow* window = glfwCreateWindow(800, 600, "OpenGL", nullptr, nullptr); // Windowed
-                                                                                 //GLFWwindow* fullScreen = glfwCreateWindow(800, 600, "OpenGL", glfwGetPrimaryMonitor(), nullptr); // Fullscreen
+    //GLFWwindow* fullScreen = glfwCreateWindow(800, 600, "OpenGL", glfwGetPrimaryMonitor(), nullptr); // Fullscreen
 
-                                                                                 // set context
-    glfwMakeContextCurrent(window);
+                                                                                 
+    glfwMakeContextCurrent(window); // set context
 
     // glew
     // =======================================
     glewExperimental = GL_TRUE;
     glewInit();
-    GLuint vertexBuffer;
-    glGenBuffers(1, &vertexBuffer);
-    printf("%u\n", vertexBuffer);
+    // GLuint vertexBuffer;
+    // glGenBuffers(1, &vertexBuffer);
+    // printf("%u\n", vertexBuffer);
     // =======================================
-
-    // open gl code
-    float vertices[] = {
-        //  Position      Color             Texcoords
-        -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // Top-left
-        0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // Top-right
-        0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // Bottom-right
-        -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f  // Bottom-left
-    };
-
-    float color[] = { 1.0f, 0.0f, 0.0f, 1.0f };
-
-    float pixels[] = {
-        0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
-        1.0f, 1.0f, 1.0f,   0.0f, 0.0f, 0.0f
-    };
-
-    GLuint elements[] = {
-        0, 1, 2,
-        2, 3, 0
-    };
-
-    GLuint ebo;
-    glGenBuffers(1, &ebo);
 
     // Vertex Array Objects: stored information of vertex array
     GLuint vao;
@@ -96,8 +73,33 @@ int main() {
     // Vertex Buffer Object: stored information of vertices
     GLuint vbo;
     glGenBuffers(1, &vbo); // Generate 1 buffer
+
+    // open gl code
+    GLfloat vertices[] = {
+        //  Position      Color             Texcoords
+        -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // Top-left
+        0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // Top-right
+        0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // Bottom-right
+        -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f  // Bottom-left
+    };
+
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    GLuint ebo;
+    glGenBuffers(1, &ebo);
+
+    GLuint elements[] = {
+        0, 1, 2,
+        2, 3, 0
+    };
+    
+    float color[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+
+    float pixels[] = {
+        0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,   0.0f, 0.0f, 0.0f
+    };
 
     // load memory into video card
     // use element memory could reuse data
@@ -122,7 +124,6 @@ int main() {
     GLuint shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
-
     // explicity spceify which buffer is written to which buffer, cause there could have mutible buffers
     glBindFragDataLocation(shaderProgram, 0, "outColor");
     glLinkProgram(shaderProgram);
@@ -132,46 +133,42 @@ int main() {
     GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
     glEnableVertexAttribArray(posAttrib);
     glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE,
-                          7 * sizeof(float), 0);
+                          7 * sizeof(GLfloat), 0);
 
     GLint colAttrib = glGetAttribLocation(shaderProgram, "color");
     glEnableVertexAttribArray(colAttrib);
     glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE,
-                          7 * sizeof(float), (void*)(2 * sizeof(float)));
+                          7 * sizeof(GLfloat), (void*)(2 * sizeof(GLfloat)));
 
     GLint texAttrib = glGetAttribLocation(shaderProgram, "texcoord");
     glEnableVertexAttribArray(texAttrib);
     glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE,
-                          7 * sizeof(float), (void*)(5 * sizeof(float)));
+                          7 * sizeof(GLfloat), (void*)(5 * sizeof(GLfloat)));
 
-    // use uniform to change the arrtibute of the triganle
-    // GLint uniColor = glGetUniformLocation(shaderProgram, "triangleColor");
-    // glUniform3f(uniColor, 0.0f, 0.0f, 1.0f);
-
-    // let the color change with time
-    // auto t_start = std::chrono::high_resolution_clock::now();
-
-    // draw texture
+    // load texture
     GLuint tex;
     glGenTextures(1, &tex);
-
     glBindTexture(GL_TEXTURE_2D, tex);
+    
     int width, height;
     unsigned char* image =
-        SOIL_load_image("sample.png", &width, &height, 0, SOIL_LOAD_RGB);
+        SOIL_load_image("./sample.png", &width, &height, 0, SOIL_LOAD_RGB);
+    printf("width = %d height = %d", width, height);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
                  GL_UNSIGNED_BYTE, image);
     SOIL_free_image_data(image);
 
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color);
+    //using this to set color of the border if we use clamp to border or something
+    //glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color);
 
-    glGenerateMipmap(GL_TEXTURE_2D);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 2, 2, 0, GL_RGB, GL_FLOAT, pixels);
+    // the texture could be a 2-D array, like this ( or a file naturally
+    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 2, 2, 0, GL_RGB, GL_FLOAT, pixels);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glGenerateMipmap(GL_TEXTURE_2D);
 
     // main loop
     while (!glfwWindowShouldClose(window)) {

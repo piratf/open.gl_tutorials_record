@@ -121,18 +121,11 @@ int main() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     bool running = true;
-    printf("111\n");
     while (running) {
         sf::Event windowEvent;
-
-
-        /*auto t_now = std::chrono::high_resolution_clock::now();
-        float time = std::chrono::duration_cast<std::chrono::duration<float>>(t_now - t_start).count();
-        glUniform3f(uniColor, 0.0f, 0.0f, (sin(time * 5.0f) + 1.0f) / 2.0f);*/
-
         while (window.pollEvent(windowEvent)) {
             switch (windowEvent.type) {
-            case sf::Event::Closed:
+                case sf::Event::Closed:
                 running = false;
                 break;
             }
