@@ -19,17 +19,24 @@ const char *vertexSource =
             gl_Position = vec4(position, 0.0, 1.0); \
         }";
 
+/* The mix function here is a special GLSL function that 
+linearly interpolates between two variables based on the third parameter. 
+A value of 0.0 will result in the first value, a value of 1.0 will result in the second value 
+and a value in between will result in a mixture of both values. */
 const char *fragmentSource =
     "#version 150 core\n     \
         in vec3 Color;      \
         in vec2 Texcoord;   \
                             \
+        uniform sampler2D texKitten;    \
+        uniform sampler2D texPuppy;     \
+                            \
         out vec4 outColor;  \
                             \
-        uniform sampler2D tex;  \
-                            \
         void main() {       \
-            outColor = texture(tex, Texcoord) * vec4(Color, 1.0);   \
+            vec4 colKitten = texture(texKitten, Texcoord);  \
+            vec4 colPuppy = texture(texPuppy, Texcoord);    \
+            outColor = mix(colKitten, colPuppy, 0.5);       \
         }";
 
 // Checking if a shader compiled successfully
@@ -168,17 +175,29 @@ int main() {
                           7 * sizeof(GLfloat), (void*)(5 * sizeof(GLfloat)));
 
     // load texture
-    GLuint tex;
-    glGenTextures(1, &tex);
-    glBindTexture(GL_TEXTURE_2D, tex);
-    
+    // two texture image here
+    GLuint textures[2];
+    glGenTextures(2, textures);
+
     int width, height;
-    unsigned char* image =
-        SOIL_load_image("./sample.png", &width, &height, 0, SOIL_LOAD_RGB);
-    printf("width = %d height = %d", width, height);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
+    unsigned char* image;
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, textures[0]);
+    image = SOIL_load_image("./sample.png", &width, &height, 0, SOIL_LOAD_RGB);
+    printf("width = %d, height = %d\n", width, height);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGB,
                  GL_UNSIGNED_BYTE, image);
     SOIL_free_image_data(image);
+    glUniform1i(glGetUniformLocation(shaderProgram, "texKitten"), 0);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, textures[1]);
+    image = SOIL_load_image("./sample2.png", &width, &height, 0, SOIL_LOAD_RGB);
+    printf("width = %d, height = %d\n", width, height);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGB,
+                 GL_UNSIGNED_BYTE, image);
+    SOIL_free_image_data(image);
+    glUniform1i(glGetUniformLocation(shaderProgram, "texPuppy"), 1);
 
     //using this to set color of the border if we use clamp to border or something
     //glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color);
@@ -190,12 +209,12 @@ int main() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glGenerateMipmap(GL_TEXTURE_2D);
+    //glGenerateMipmap(GL_TEXTURE_2D);
 
     mainLoop(window);
 
     //exit
-    glDeleteTextures(1, &tex);
+    glDeleteTextures(2, textures);
 
     glDeleteProgram(shaderProgram);
     glDeleteShader(fragmentShader);
