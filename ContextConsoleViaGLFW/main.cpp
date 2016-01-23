@@ -40,7 +40,7 @@ void checkStatus(GLuint &shader) {
     // If status is equal to GL_TRUE, then your shader was compiled successfully. 
 }
 
-int main() {
+GLFWwindow* initContext() {
     // init window
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -53,7 +53,6 @@ int main() {
     GLFWwindow* window = glfwCreateWindow(800, 600, "OpenGL", nullptr, nullptr); // Windowed
     //GLFWwindow* fullScreen = glfwCreateWindow(800, 600, "OpenGL", glfwGetPrimaryMonitor(), nullptr); // Fullscreen
 
-                                                                                 
     glfwMakeContextCurrent(window); // set context
 
     // glew
@@ -64,6 +63,29 @@ int main() {
     // glGenBuffers(1, &vertexBuffer);
     // printf("%u\n", vertexBuffer);
     // =======================================
+    return window;
+}
+
+void mainLoop(GLFWwindow* _window) {
+    // main loop
+    while (!glfwWindowShouldClose(_window)) {
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+        /*auto t_now = std::chrono::high_resolution_clock::now();
+        float time = std::chrono::duration_cast<std::chrono::duration<float>>(t_now - t_start).count();
+        glUniform3f(uniColor, 0.0f, 0.0f, (sin(time * 5.0f) + 1.0f) / 2.0f);*/
+
+        glfwSwapBuffers(_window);
+        glfwPollEvents();
+
+        if (glfwGetKey(_window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+            glfwSetWindowShouldClose(_window, GL_TRUE);
+        }
+    }
+}
+
+int main() {
+    GLFWwindow* window = initContext();
 
     // Vertex Array Objects: stored information of vertex array
     GLuint vao;
@@ -161,7 +183,7 @@ int main() {
     //using this to set color of the border if we use clamp to border or something
     //glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color);
 
-    // the texture could be a 2-D array, like this ( or a file naturally
+    //the texture could be a 2-D array, like this ( or a file naturally
     //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 2, 2, 0, GL_RGB, GL_FLOAT, pixels);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -170,24 +192,9 @@ int main() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glGenerateMipmap(GL_TEXTURE_2D);
 
-    // main loop
-    while (!glfwWindowShouldClose(window)) {
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    mainLoop(window);
 
-        /*auto t_now = std::chrono::high_resolution_clock::now();
-        float time = std::chrono::duration_cast<std::chrono::duration<float>>(t_now - t_start).count();
-        glUniform3f(uniColor, 0.0f, 0.0f, (sin(time * 5.0f) + 1.0f) / 2.0f);*/
-
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-
-        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-            glfwSetWindowShouldClose(window, GL_TRUE);
-        }
-    }
-
-    // end
-    //SOIL_free_image_data(image);
+    //exit
     glDeleteTextures(1, &tex);
 
     glDeleteProgram(shaderProgram);
