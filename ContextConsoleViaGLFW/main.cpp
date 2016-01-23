@@ -36,7 +36,7 @@ const char *fragmentSource =
         void main() {       \
             vec4 colKitten = texture(texKitten, Texcoord);  \
             vec4 colPuppy = texture(texPuppy, Texcoord);    \
-            outColor = mix(colKitten, colPuppy, 0.5);       \
+            outColor = mix(colKitten, colPuppy, 0.6);       \
         }";
 
 // Checking if a shader compiled successfully
@@ -181,21 +181,25 @@ int main() {
 
     int width, height;
     unsigned char* image;
+
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textures[0]);
-    image = SOIL_load_image("./sample.png", &width, &height, 0, SOIL_LOAD_RGB);
+    image = SOIL_load_image("./sample.png", &width, &height, 0, SOIL_LOAD_RGBA);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
     printf("width = %d, height = %d\n", width, height);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGB,
-                 GL_UNSIGNED_BYTE, image);
     SOIL_free_image_data(image);
     glUniform1i(glGetUniformLocation(shaderProgram, "texKitten"), 0);
 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, textures[1]);
-    image = SOIL_load_image("./sample2.png", &width, &height, 0, SOIL_LOAD_RGB);
+    image = SOIL_load_image("./sample2.png", &width, &height, 0, SOIL_LOAD_RGBA);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
     printf("width = %d, height = %d\n", width, height);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGB,
-                 GL_UNSIGNED_BYTE, image);
     SOIL_free_image_data(image);
     glUniform1i(glGetUniformLocation(shaderProgram, "texPuppy"), 1);
 
