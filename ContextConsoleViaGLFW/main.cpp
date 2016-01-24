@@ -3,6 +3,9 @@
 #include <GLFW/glfw3.h>
 #include <SOIL.h>
 #include <thread>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 // code to be compiled in video card to be the shader
 const char *vertexSource =
@@ -13,10 +16,13 @@ const char *vertexSource =
                             \
         out vec3 Color;     \
         out vec2 Texcoord;  \
+                            \
+        uniform mat4 trans; \
+                            \
         void main() {       \
             Color = color;  \
             Texcoord = texcoord;    \
-            gl_Position = vec4(position, 0.0, 1.0); \
+            gl_Position = trans * vec4(position, 0.0, 1.0); \
         }";
 
 /* The mix function here is a special GLSL function that 
@@ -214,6 +220,22 @@ int main() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     //glGenerateMipmap(GL_TEXTURE_2D);
+
+    // matrix rotate
+    glm::mat4 trans;
+    trans = glm::rotate(trans, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    //glm::vec4 result = trans * glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+    //printf("%f, %f, %f\n", result.x, result.y, result.z);
+    GLint uniTrans = glGetUniformLocation(shaderProgram, "trans");
+    /*The second parameter of the glUniformMatrix4fv function specifies
+    how many matrices are to be uploaded,
+    because you can have arrays of matrices in GLSL.
+    The third parameter specifies whether the specified matrix should be transposed before usage.
+    This is related to the way matrices are stored as float arrays in memory;
+    you don't have to worry about it.
+    The last parameter specifies the matrix to upload,
+    where the glm::value_ptr function converts the matrix class into an array of 16 (4x4) floats.*/
+    glUniformMatrix4fv(uniTrans, 1, GL_FALSE, glm::value_ptr(trans));
 
     mainLoop(window);
 
