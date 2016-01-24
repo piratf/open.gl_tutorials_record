@@ -80,21 +80,7 @@ GLFWwindow* initContext() {
 }
 
 void mainLoop(GLFWwindow* _window) {
-    // main loop
-    while (!glfwWindowShouldClose(_window)) {
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-        /*auto t_now = std::chrono::high_resolution_clock::now();
-        float time = std::chrono::duration_cast<std::chrono::duration<float>>(t_now - t_start).count();
-        glUniform3f(uniColor, 0.0f, 0.0f, (sin(time * 5.0f) + 1.0f) / 2.0f);*/
-
-        glfwSwapBuffers(_window);
-        glfwPollEvents();
-
-        if (glfwGetKey(_window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-            glfwSetWindowShouldClose(_window, GL_TRUE);
-        }
-    }
+    
 }
 
 int main() {
@@ -222,8 +208,8 @@ int main() {
     //glGenerateMipmap(GL_TEXTURE_2D);
 
     // matrix rotate
-    glm::mat4 trans;
-    trans = glm::rotate(trans, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    //glm::mat4 trans;
+    //trans = glm::rotate(trans, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     //glm::vec4 result = trans * glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
     //printf("%f, %f, %f\n", result.x, result.y, result.z);
     GLint uniTrans = glGetUniformLocation(shaderProgram, "trans");
@@ -235,9 +221,39 @@ int main() {
     you don't have to worry about it.
     The last parameter specifies the matrix to upload,
     where the glm::value_ptr function converts the matrix class into an array of 16 (4x4) floats.*/
-    glUniformMatrix4fv(uniTrans, 1, GL_FALSE, glm::value_ptr(trans));
+    //glUniformMatrix4fv(uniTrans, 1, GL_FALSE, glm::value_ptr(trans));
 
-    mainLoop(window);
+    auto t_start = std::chrono::high_resolution_clock::now();
+
+    // main loop
+    while (!glfwWindowShouldClose(window)) {
+        // Clear the screen to black
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        auto t_now = std::chrono::high_resolution_clock::now();
+        float time = std::chrono::duration_cast<std::chrono::duration<float>>(t_now - t_start).count();
+
+        glm::mat4 trans;
+        trans = glm::rotate(
+            trans,
+            time * glm::radians(180.0f),
+            glm::vec3(0.0f, 0.0f, 1.0f)
+            );
+        glUniformMatrix4fv(uniTrans, 1, GL_FALSE, glm::value_ptr(trans));
+
+        // Draw a rectangle from the 2 triangles using 6 indices
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+        //glUniform3f(uniColor, 0.0f, 0.0f, (sin(time * 5.0f) + 1.0f) / 2.0f);
+
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+
+        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+            glfwSetWindowShouldClose(window, GL_TRUE);
+        }
+    }
 
     //exit
     glDeleteTextures(2, textures);

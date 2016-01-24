@@ -3,8 +3,12 @@
 
 // Headers
 #include <GL/glew.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <SOIL.h>
 #include <SFML/Window.hpp>
+#include <chrono>
 
 // Shader sources
 const GLchar* vertexSource =
@@ -14,11 +18,12 @@ const GLchar* vertexSource =
 "in vec2 texcoord;"
 "out vec3 Color;"
 "out vec2 Texcoord;"
+"uniform mat4 trans;"
 "void main()"
 "{"
 "    Color = color;"
 "    Texcoord = texcoord;"
-"    gl_Position = vec4(position, 0.0, 1.0);"
+"    gl_Position = trans * vec4(position, 0.0, 1.0);"
 "}";
 const GLchar* fragmentSource =
 "#version 150 core\n"
@@ -29,10 +34,12 @@ const GLchar* fragmentSource =
 "uniform sampler2D texPuppy;"
 "void main()"
 "{"
-"    outColor = mix(texture(texKitten, Texcoord), texture(texPuppy, Texcoord), 0.3);"
+"    outColor = mix(texture(texKitten, Texcoord), texture(texPuppy, Texcoord), 0.5);"
 "}";
 
 int main() {
+    auto t_start = std::chrono::high_resolution_clock::now();
+
     sf::ContextSettings settings;
     settings.depthBits = 24;
     settings.stencilBits = 8;
@@ -117,7 +124,6 @@ int main() {
     glBindTexture(GL_TEXTURE_2D, textures[0]);
     image = SOIL_load_image("./sample.png", &width, &height, 0, SOIL_LOAD_RGBA);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
-    printf("width = %d, height = %d\n", width, height);
     SOIL_free_image_data(image);
     glUniform1i(glGetUniformLocation(shaderProgram, "texKitten"), 0);
 
@@ -130,7 +136,6 @@ int main() {
     glBindTexture(GL_TEXTURE_2D, textures[1]);
     image = SOIL_load_image("./sample2.png", &width, &height, 0, SOIL_LOAD_RGBA);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
-    printf("width = %d, height = %d\n", width, height);
     SOIL_free_image_data(image);
     glUniform1i(glGetUniformLocation(shaderProgram, "texPuppy"), 1);
 
@@ -138,6 +143,8 @@ int main() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    GLint uniTrans = glGetUniformLocation(shaderProgram, "trans");
 
     bool running = true;
     while (running) {
@@ -153,6 +160,18 @@ int main() {
         // Clear the screen to black
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        // Calculate transformation
+        auto t_now = std::chrono::high_resolution_clock::now();
+        float time = std::chrono::duration_cast<std::chrono::duration<float>>(t_now - t_start).count();
+
+        glm::mat4 trans;
+        trans = glm::rotate(
+            trans,
+            time * glm::radians(180.0f),
+            glm::vec3(0.0f, 0.0f, 1.0f)
+            );
+        glUniformMatrix4fv(uniTrans, 1, GL_FALSE, glm::value_ptr(trans));
 
         // Draw a rectangle from the 2 triangles using 6 indices
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
