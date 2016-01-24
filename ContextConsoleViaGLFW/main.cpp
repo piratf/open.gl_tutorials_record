@@ -17,12 +17,14 @@ const char *vertexSource =
         out vec3 Color;     \
         out vec2 Texcoord;  \
                             \
-        uniform mat4 trans; \
+        uniform mat4 model; \
+        uniform mat4 view;  \
+        uniform mat4 proj;  \
                             \
         void main() {       \
             Color = color;  \
             Texcoord = texcoord;    \
-            gl_Position = trans * vec4(position, 0.0, 1.0); \
+            gl_Position = proj * view * model * vec4(position, 0.0, 1.0); \
         }";
 
 /* The mix function here is a special GLSL function that 
@@ -212,7 +214,7 @@ int main() {
     //trans = glm::rotate(trans, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     //glm::vec4 result = trans * glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
     //printf("%f, %f, %f\n", result.x, result.y, result.z);
-    GLint uniTrans = glGetUniformLocation(shaderProgram, "trans");
+    GLint uniModel = glGetUniformLocation(shaderProgram, "model");
     /*The second parameter of the glUniformMatrix4fv function specifies
     how many matrices are to be uploaded,
     because you can have arrays of matrices in GLSL.
@@ -222,6 +224,18 @@ int main() {
     The last parameter specifies the matrix to upload,
     where the glm::value_ptr function converts the matrix class into an array of 16 (4x4) floats.*/
     //glUniformMatrix4fv(uniTrans, 1, GL_FALSE, glm::value_ptr(trans));
+
+    glm::mat4 view = glm::lookAt(
+        glm::vec3(1.2f, 1.2f, 1.2f),
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, 1.0f)
+        );
+    GLint uniView = glGetUniformLocation(shaderProgram, "view");
+    glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view));
+
+    glm::mat4 proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 1.0f, 10.0f);
+    GLint uniProj = glGetUniformLocation(shaderProgram, "proj");
+    glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(proj));
 
     auto t_start = std::chrono::high_resolution_clock::now();
 
@@ -234,13 +248,13 @@ int main() {
         auto t_now = std::chrono::high_resolution_clock::now();
         float time = std::chrono::duration_cast<std::chrono::duration<float>>(t_now - t_start).count();
 
-        glm::mat4 trans;
-        trans = glm::rotate(
-            trans,
+        glm::mat4 model;
+        model = glm::rotate(
+            model,
             time * glm::radians(180.0f),
             glm::vec3(0.0f, 0.0f, 1.0f)
             );
-        glUniformMatrix4fv(uniTrans, 1, GL_FALSE, glm::value_ptr(trans));
+        glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model));
 
         // Draw a rectangle from the 2 triangles using 6 indices
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
