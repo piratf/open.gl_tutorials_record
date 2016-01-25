@@ -10,44 +10,44 @@
 
 // code to be compiled in video card to be the shader
 const GLchar *vertexSource =
-    "#version 150 core\n     \
-        in vec3 position;   \
-        in vec3 color;      \
-        in vec2 texcoord;   \
-                            \
-        out vec3 Color;     \
-        out vec2 Texcoord;  \
-                            \
-        uniform mat4 model; \
-        uniform mat4 view;  \
-        uniform mat4 proj;  \
-        uniform vec3 overrideColor; \
-                            \
-        void main() {       \
-            Color = overrideColor * color;  \
-            Texcoord = texcoord;    \
-            gl_Position = proj * view * model * vec4(position, 1.0); \
-        }";
+"#version 150 core\n     \
+in vec3 position;   \
+in vec3 color;      \
+in vec2 texcoord;   \
+\
+out vec3 Color;     \
+out vec2 Texcoord;  \
+\
+uniform mat4 model; \
+uniform mat4 view;  \
+uniform mat4 proj;  \
+uniform vec3 overrideColor; \
+\
+void main() {       \
+    Color = overrideColor * color;  \
+    Texcoord = texcoord;    \
+    gl_Position = proj * view * model * vec4(position, 1.0); \
+}";
 
 /* The mix function here is a special GLSL function that 
 linearly interpolates between two variables based on the third parameter. 
 A value of 0.0 will result in the first value, a value of 1.0 will result in the second value 
 and a value in between will result in a mixture of both values. */
 const GLchar *fragmentSource =
-    "#version 150 core\n     \
-        in vec3 Color;      \
-        in vec2 Texcoord;   \
-                            \
-        uniform sampler2D texKitten;    \
-        uniform sampler2D texPuppy;     \
-                            \
-        out vec4 outColor;  \
-                            \
-        void main() {       \
-            vec4 texColor = mix(texture(texKitten, Texcoord),   \
-            texture(texPuppy, Texcoord), 0.5);                  \
-            outColor = vec4(Color, 1.0) * texColor;             \
-        }";
+"#version 150 core\n     \
+in vec3 Color;      \
+in vec2 Texcoord;   \
+\
+uniform sampler2D texKitten;    \
+uniform sampler2D texPuppy;     \
+\
+out vec4 outColor;  \
+\
+void main() {       \
+    vec4 texColor = mix(texture(texKitten, Texcoord),   \
+        texture(texPuppy, Texcoord), 0.5);                  \
+outColor = vec4(Color, 1.0);             \
+}";
 
 // Checking if a shader compiled successfully
 void checkStatus(GLuint &shader) {
@@ -84,7 +84,7 @@ GLFWwindow* initContext() {
 }
 
 void mainLoop(GLFWwindow* _window) {
-    
+
 }
 
 int main() {
@@ -101,46 +101,46 @@ int main() {
 
     // open gl code
     GLfloat vertices[] = {
+        -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+        0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+        0.5f,  0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+        0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
         -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-        0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-        0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-        0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
 
-        -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-        0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+        0.5f, -0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+        0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
         0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-        0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
         -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
 
-        -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,0.0f, 1.0f, 0.0f,  1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,0.0f, 0.0f, 1.0f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,1.0f, 1.0f, 1.0f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
         -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
 
-        0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-        0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-        0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-        0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-        0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-        0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+        0.5f,  0.5f,  0.5f, 1.0f, 0.0f, 0.0f,1.0f, 0.0f,
+        0.5f,  0.5f, -0.5f,0.0f, 1.0f, 0.0f, 1.0f, 1.0f,
+        0.5f, -0.5f, -0.5f,0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+        0.5f, -0.5f, -0.5f,1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
+        0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 0.0f,0.0f, 0.0f,
+        0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f,1.0f, 0.0f,
 
-        -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-        0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+        0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f,
+        0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,
         0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-        0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
         -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
 
-        -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-        0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+        0.5f,  0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f,
+        0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,
         0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-        0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
         -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
 
         -1.0f, -1.0f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
@@ -155,26 +155,32 @@ int main() {
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     // use element to draw things
-    // GLuint ebo;
-    // glGenBuffers(1, &ebo);
+    GLuint ebo;
+    glGenBuffers(1, &ebo);
 
-    // GLuint elements[] = {
-    //     0, 1, 2,
-    //     2, 3, 0
-    // };
-    
-    // float color[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+    GLuint elements[36] = {
+        30, 31, 32,
+        30, 34, 32
+    };
 
-    // float pixels[] = {
-    //     0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
-    //     1.0f, 1.0f, 1.0f,   0.0f, 0.0f, 0.0f
-    // };
+    for (int i = 1; i < 6; ++i) {
+        for (int j = 0; j < 6; ++j) {
+            elements[i * 6 + j] = elements[(i - 1) * 6 + j] - 6;
+        }
+    }    
 
-    // // load memory into video card
-    // // use element memory could reuse data
-    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    // glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-    //              sizeof(elements), elements, GL_STATIC_DRAW);
+    float color[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+
+    float pixels[] = {
+        0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,   0.0f, 0.0f, 0.0f
+    };
+
+    // load memory into video card
+    // use element memory could reuse data
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+     sizeof(elements), elements, GL_STATIC_DRAW);
 
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexSource, NULL);
@@ -202,17 +208,17 @@ int main() {
     GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
     glEnableVertexAttribArray(posAttrib);
     glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE,
-                          8 * sizeof(GLfloat), 0);
+      8 * sizeof(GLfloat), 0);
 
     GLint colAttrib = glGetAttribLocation(shaderProgram, "color");
     glEnableVertexAttribArray(colAttrib);
     glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE,
-                          8 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
+      8 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
 
     GLint texAttrib = glGetAttribLocation(shaderProgram, "texcoord");
     glEnableVertexAttribArray(texAttrib);
     glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE,
-                          8 * sizeof(GLfloat), (void*)(6 * sizeof(GLfloat)));
+      8 * sizeof(GLfloat), (void*)(6 * sizeof(GLfloat)));
 
     // load texture
     // two texture image here
@@ -307,8 +313,8 @@ int main() {
         glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model));
 
         // Draw a rectangle from the 2 triangles using 6 indices
-        //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        // glDrawArrays(GL_TRIANGLES, 0, 36);
+        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
         
         glEnable(GL_STENCIL_TEST);
 
@@ -328,12 +334,13 @@ int main() {
 
         model = glm::scale(
             glm::translate(model, glm::vec3(0, 0, -1)),
-            glm::vec3(1, 1, -1)
+            glm::vec3(1, 1, 1)
             );
         glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model));
         
         glUniform3f(uniColor, 0.3f, 0.3f, 0.3f);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        // glDrawArrays(GL_TRIANGLES, 0, 36);
+        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
         glUniform3f(uniColor, 1.0f, 1.0f, 1.0f);
 
         glDisable(GL_STENCIL_TEST);
