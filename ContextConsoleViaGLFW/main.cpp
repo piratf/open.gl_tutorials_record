@@ -1,14 +1,15 @@
 #define GLEW_STATIC
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <SOIL.h>
-#include <thread>
+#include <chrono>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 // code to be compiled in video card to be the shader
-const char *vertexSource =
+const GLchar *vertexSource =
     "#version 150 core\n     \
         in vec3 position;   \
         in vec3 color;      \
@@ -20,9 +21,10 @@ const char *vertexSource =
         uniform mat4 model; \
         uniform mat4 view;  \
         uniform mat4 proj;  \
+        uniform vec3 overrideColor; \
                             \
         void main() {       \
-            Color = color;  \
+            Color = overrideColor * color;  \
             Texcoord = texcoord;    \
             gl_Position = proj * view * model * vec4(position, 1.0); \
         }";
@@ -31,7 +33,7 @@ const char *vertexSource =
 linearly interpolates between two variables based on the third parameter. 
 A value of 0.0 will result in the first value, a value of 1.0 will result in the second value 
 and a value in between will result in a mixture of both values. */
-const char *fragmentSource =
+const GLchar *fragmentSource =
     "#version 150 core\n     \
         in vec3 Color;      \
         in vec2 Texcoord;   \
@@ -139,32 +141,40 @@ int main() {
         0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
         0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
         -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f
+        -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
+
+        -1.0f, -1.0f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+        1.0f, -1.0f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+        1.0f,  1.0f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+        1.0f,  1.0f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+        -1.0f,  1.0f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+        -1.0f, -1.0f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f
     };
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    GLuint ebo;
-    glGenBuffers(1, &ebo);
+    // use element to draw things
+    // GLuint ebo;
+    // glGenBuffers(1, &ebo);
 
-    GLuint elements[] = {
-        0, 1, 2,
-        2, 3, 0
-    };
+    // GLuint elements[] = {
+    //     0, 1, 2,
+    //     2, 3, 0
+    // };
     
-    float color[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+    // float color[] = { 1.0f, 0.0f, 0.0f, 1.0f };
 
-    float pixels[] = {
-        0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
-        1.0f, 1.0f, 1.0f,   0.0f, 0.0f, 0.0f
-    };
+    // float pixels[] = {
+    //     0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+    //     1.0f, 1.0f, 1.0f,   0.0f, 0.0f, 0.0f
+    // };
 
-    // load memory into video card
-    // use element memory could reuse data
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                 sizeof(elements), elements, GL_STATIC_DRAW);
+    // // load memory into video card
+    // // use element memory could reuse data
+    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    // glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+    //              sizeof(elements), elements, GL_STATIC_DRAW);
 
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexSource, NULL);
@@ -272,14 +282,17 @@ int main() {
     glm::mat4 proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 1.0f, 10.0f);
     GLint uniProj = glGetUniformLocation(shaderProgram, "proj");
     glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(proj));
+    
+    GLint uniColor = glGetUniformLocation(shaderProgram, "overrideColor");
 
     auto t_start = std::chrono::high_resolution_clock::now();
 
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_STENCIL_TEST);
     // main loop
     while (!glfwWindowShouldClose(window)) {
-        // Clear the screen to black
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        // Clear the screen to white
+        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         auto t_now = std::chrono::high_resolution_clock::now();
@@ -296,6 +309,34 @@ int main() {
         // Draw a rectangle from the 2 triangles using 6 indices
         //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glDrawArrays(GL_TRIANGLES, 0, 36);
+        
+        glEnable(GL_STENCIL_TEST);
+
+        // Draw floor
+        glStencilFunc(GL_ALWAYS, 1, 0xFF); // Set any stencil to 1
+        glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+        glStencilMask(0xFF); // Write to stencil buffer
+        glDepthMask(GL_FALSE); // Don't write to depth buffer
+        glClear(GL_STENCIL_BUFFER_BIT); // Clear stencil buffer (0 by default)
+
+        glDrawArrays(GL_TRIANGLES, 36, 6);
+
+        // Draw cube reflection
+        glStencilFunc(GL_EQUAL, 1, 0xFF); // Pass test if stencil value is 1
+        glStencilMask(0x00); // Don't write anything to stencil buffer
+        glDepthMask(GL_TRUE); // Write to depth buffer
+
+        model = glm::scale(
+            glm::translate(model, glm::vec3(0, 0, -1)),
+            glm::vec3(1, 1, -1)
+            );
+        glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model));
+        
+        glUniform3f(uniColor, 0.3f, 0.3f, 0.3f);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glUniform3f(uniColor, 1.0f, 1.0f, 1.0f);
+
+        glDisable(GL_STENCIL_TEST);
 
         //glUniform3f(uniColor, 0.0f, 0.0f, (sin(time * 5.0f) + 1.0f) / 2.0f);
 
@@ -314,7 +355,7 @@ int main() {
     glDeleteShader(fragmentShader);
     glDeleteShader(vertexShader);
 
-    glDeleteBuffers(1, &ebo);
+    // glDeleteBuffers(1, &ebo);
     glDeleteBuffers(1, &vbo);
 
     glDeleteVertexArrays(1, &vao);
